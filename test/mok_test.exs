@@ -25,8 +25,8 @@ defmodule MokTest do
     end
 
     def remote_call_selector(mocks) do
-      a = [1, 2, 3] |> List.first() |> Mok.inject(mocks, 1)
-      b = [1, 2, 3] |> List.first() |> Mok.inject(mocks, 2)
+      a = [1, 2, 3] |> List.first() |> Mok.inject(mocks, "here")
+      b = [1, 2, 3] |> List.first() |> Mok.inject(mocks, "there")
 
       a + b
     end
@@ -57,7 +57,7 @@ defmodule MokTest do
 
     assert 11 ==
              Target.remote_call_selector(
-               Mok.mock(%{{&List.first/1, 1} => 5, {&List.first/1, 2} => 6})
+               Mok.mock(%{{&List.first/1, "here"} => 5, {&List.first/1, "there"} => 6})
              )
   end
 
