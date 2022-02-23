@@ -1,5 +1,9 @@
 defmodule Mok do
-  defmacro inject(capture_or_call, mocks, selector \\ nil)
+  defmodule Nil do
+    defstruct []
+  end
+
+  defmacro inject(capture_or_call, mocks, selector \\ Macro.escape(%Nil{}))
 
   # Remote capture
   defmacro inject(
@@ -9,7 +13,7 @@ defmodule Mok do
            ) do
     quote do
       fun = :erlang.make_fun(unquote(mod), unquote(name), unquote(arity))
-      Map.get(unquote(mocks), {fun, unquote(selector)}, fun)
+      Mok.find_func(unquote(mocks), fun, unquote(selector), fun)
     end
   end
 
@@ -20,7 +24,7 @@ defmodule Mok do
 
     quote do
       fun = :erlang.make_fun(unquote(mod), unquote(name), unquote(arity))
-      Map.get(unquote(mocks), {fun, unquote(selector)}, unquote(ast))
+      Mok.find_func(unquote(mocks), fun, unquote(selector), unquote(ast))
     end
   end
 
@@ -31,7 +35,7 @@ defmodule Mok do
 
     quote do
       fun = :erlang.make_fun(unquote(mod), unquote(name), unquote(arity))
-      Map.get(unquote(mocks), {fun, unquote(selector)}, fun) |> :erlang.apply(unquote(args))
+      Mok.find_func(unquote(mocks), fun, unquote(selector), fun) |> :erlang.apply(unquote(args))
     end
   end
 
@@ -45,11 +49,19 @@ defmodule Mok do
     quote do
       fun = :erlang.make_fun(unquote(mod), unquote(name), unquote(arity))
 
-      case Map.fetch(unquote(mocks), {fun, unquote(selector)}) do
-        {:ok, mock} -> :erlang.apply(mock, unquote(args))
-        :error -> unquote(local_call)
+      case Mok.find_func(unquote(mocks), fun, unquote(selector), nil) do
+        nil -> unquote(local_call)
+        mock -> :erlang.apply(mock, unquote(args))
       end
     end
+  end
+
+  def find_func(mocks, fun, %Nil{}, default) do
+    Map.get(mocks, fun, default)
+  end
+
+  def find_func(mocks, fun, selector, default) do
+    Map.get(mocks, {fun, selector}, default)
   end
 
   # Mock
@@ -57,7 +69,7 @@ defmodule Mok do
     map
     |> Map.new(fn
       {f, v} when is_function(f) ->
-        {{f, nil}, const_fn(Function.info(f)[:arity], v)}
+        {f, const_fn(Function.info(f)[:arity], v)}
 
       {{f, selector}, v} when is_function(f) ->
         {{f, selector}, const_fn(Function.info(f)[:arity], v)}

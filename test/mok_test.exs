@@ -25,9 +25,13 @@ defmodule MokTest do
     end
 
     def remote_call_selector(mocks) do
+      # 1
       a = [1, 2, 3] |> List.first() |> Mok.inject(mocks, "unmatched")
-      b = [1, 2, 3] |> List.first() |> Mok.inject(mocks, "here")
+      # 10
+      b = [1, 2, 3] |> List.first() |> Mok.inject(mocks, "matched")
+      # 1
       c = [1, 2, 3] |> List.first() |> Mok.inject(mocks, nil)
+      # 100
       d = [1, 2, 3] |> List.first() |> Mok.inject(mocks)
 
       a + b + c + d
@@ -57,10 +61,10 @@ defmodule MokTest do
   test "remote_call_selector" do
     assert 4 == Target.remote_call_selector(%{})
 
-    assert 211 ==
+    assert 112 ==
              Target.remote_call_selector(
                Mok.mock(%{
-                 {&List.first/1, "here"} => 10,
+                 {&List.first/1, "matched"} => 10,
                  &List.first/1 => 100
                })
              )
@@ -73,7 +77,7 @@ defmodule MokTest do
         {&Enum.map/2, "here"} => 200
       })
 
-    f1 = m[{&Enum.count/1, nil}]
+    f1 = m[&Enum.count/1]
     f2 = m[{&Enum.map/2, "here"}]
 
     assert :erlang.fun_info(f1)[:arity] == 1
