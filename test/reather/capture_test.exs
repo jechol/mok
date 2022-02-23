@@ -9,30 +9,24 @@ defmodule Reather.CaptureTest do
       List.first(list)
     end
 
-    reather external_capture() do
-      return :erlang.apply((&List.first/1) |> Reather.inject(), [[1, 2]]) |> Right.new()
+    def external_capture(mock) do
+      :erlang.apply((&List.first/1) |> Reather.inject(mock), [[1, 2]])
     end
 
-    reather local_capture() do
-      return :erlang.apply((&local_first/1) |> Reather.inject(), [[100, 200]]) |> Right.new()
+    def local_capture(mock) do
+      :erlang.apply((&local_first/1) |> Reather.inject(mock), [[100, 200]])
     end
   end
 
   test "external" do
-    assert %Right{right: 1} ==
-             Target.external_capture() |> Reather.run(%{})
+    assert 1 == Target.external_capture(%{})
 
-    assert %Right{right: :external} ==
-             Target.external_capture()
-             |> Reather.run(Reather.mock(%{&List.first/1 => :external}))
+    assert :external == Target.external_capture(Reather.mock(%{&List.first/1 => :external}))
   end
 
   test "local" do
-    assert %Right{right: 100} ==
-             Target.local_capture() |> Reather.run(%{})
+    assert 100 == Target.local_capture(%{})
 
-    assert %Right{right: :local} ==
-             Target.local_capture()
-             |> Reather.run(Reather.mock(%{&Target.local_first/1 => :local}))
+    assert :local == Target.local_capture(Reather.mock(%{&Target.local_first/1 => :local}))
   end
 end
