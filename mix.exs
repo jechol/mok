@@ -1,4 +1,4 @@
-defmodule Reather.MixProject do
+defmodule Mok.MixProject do
   use Mix.Project
 
   @version "0.1.0"

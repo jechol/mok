@@ -1,4 +1,4 @@
-defmodule Reather do
+defmodule Mok do
   # Remote capture
   defmacro inject(
              {:&, _, [{:/, _, [{{:., _, [mod, name]}, [{:no_parens, true}, _], []}, arity]}]},
@@ -58,6 +58,8 @@ defmodule Reather do
     end)
   end
 
+  # Private
+
   defp const_fn(0, v), do: fn -> v end
   defp const_fn(1, v), do: fn _a -> v end
   defp const_fn(2, v), do: fn _a, _b -> v end
@@ -69,16 +71,12 @@ defmodule Reather do
   defp const_fn(8, v), do: fn _a, _b, _c, _d, _e, _f, _g, _h -> v end
   defp const_fn(9, v), do: fn _a, _b, _c, _d, _e, _f, _g, _h, _i -> v end
 
-  # Private
-
   defp find_func_module(name_arity, mod_funs, caller_mod) do
-    remote =
-      mod_funs
-      |> Enum.find(fn {_mod, funs} ->
-        name_arity in funs
-      end)
-
-    case remote do
+    mod_funs
+    |> Enum.find(fn {_mod, funs} ->
+      name_arity in funs
+    end)
+    |> case do
       {remote_mod, _funs} -> remote_mod
       nil -> caller_mod
     end
