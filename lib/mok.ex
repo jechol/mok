@@ -1,39 +1,42 @@
 defmodule Mok do
+  defmacro inject(capture_or_call, mocks, selector \\ nil)
+
   # Remote capture
   defmacro inject(
              {:&, _, [{:/, _, [{{:., _, [mod, name]}, [{:no_parens, true}, _], []}, arity]}]},
-             mocks
+             mocks,
+             selector
            ) do
     quote do
       fun = :erlang.make_fun(unquote(mod), unquote(name), unquote(arity))
-      Map.get(unquote(mocks), fun, fun)
+      Map.get(unquote(mocks), {fun, unquote(selector)}, fun)
     end
   end
 
   # Local capture
-  defmacro inject({:&, _, [{:/, _, [{name, _, _}, arity]}]} = ast, mocks) do
+  defmacro inject({:&, _, [{:/, _, [{name, _, _}, arity]}]} = ast, mocks, selector) do
     %Macro.Env{module: caller_mod, functions: mod_funs} = __CALLER__
     mod = find_func_module({name, arity}, mod_funs, caller_mod)
 
     quote do
       fun = :erlang.make_fun(unquote(mod), unquote(name), unquote(arity))
-      Map.get(unquote(mocks), fun, unquote(ast))
+      Map.get(unquote(mocks), {fun, unquote(selector)}, unquote(ast))
     end
   end
 
   # Remote call
-  defmacro inject({{:., _, [mod, name]}, _, args}, mocks)
+  defmacro inject({{:., _, [mod, name]}, _, args}, mocks, selector)
            when is_atom(name) and is_list(args) do
     arity = Enum.count(args)
 
     quote do
       fun = :erlang.make_fun(unquote(mod), unquote(name), unquote(arity))
-      Map.get(unquote(mocks), fun, fun) |> :erlang.apply(unquote(args))
+      Map.get(unquote(mocks), {fun, unquote(selector)}, fun) |> :erlang.apply(unquote(args))
     end
   end
 
   # Local call
-  defmacro inject({name, _, args} = local_call, mocks)
+  defmacro inject({name, _, args} = local_call, mocks, selector)
            when is_atom(name) and is_list(args) do
     arity = Enum.count(args)
     %Macro.Env{module: caller_mod, functions: mod_funs} = __CALLER__
@@ -42,7 +45,7 @@ defmodule Mok do
     quote do
       fun = :erlang.make_fun(unquote(mod), unquote(name), unquote(arity))
 
-      case Map.fetch(unquote(mocks), fun) do
+      case Map.fetch(unquote(mocks), {fun, unquote(selector)}) do
         {:ok, mock} -> :erlang.apply(mock, unquote(args))
         :error -> unquote(local_call)
       end
@@ -53,8 +56,11 @@ defmodule Mok do
   def mock(%{} = map) do
     map
     |> Map.new(fn
-      {f, v} when is_function(f) -> {f, const_fn(Function.info(f)[:arity], v)}
-      {{f, label}, v} when is_function(f) -> {{f, label}, const_fn(Function.info(f)[:arity], v)}
+      {f, v} when is_function(f) ->
+        {{f, nil}, const_fn(Function.info(f)[:arity], v)}
+
+      {{f, selector}, v} when is_function(f) ->
+        {{f, selector}, const_fn(Function.info(f)[:arity], v)}
     end)
   end
 
