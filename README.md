@@ -26,8 +26,8 @@ end
 
     def call(mocks) do
       a = [1, 2, 3] |> List.first() |> Mok.inject(mocks, "unmatched") # 1
-      b = [1, 2, 3] |> List.first() |> Mok.inject(mocks, "here") # 10
-      c = [1, 2, 3] |> List.first() |> Mok.inject(mocks, nil) # 100
+      b = [1, 2, 3] |> List.first() |> Mok.inject(mocks, "matched") # 10
+      c = [1, 2, 3] |> List.first() |> Mok.inject(mocks, nil) # 1
       d = [1, 2, 3] |> List.first() |> Mok.inject(mocks) # 100
 
       a + b + c + d
@@ -40,10 +40,10 @@ require Mok
 
 assert 4 == Target.call(%{})
 
-assert 211 ==
+assert 112 ==
           Target.call(
             Mok.mock(%{
-              {&List.first/1, "here"} => 10,
+              {&List.first/1, "matched"} => 10,
               &List.first/1 => 100
             })
           )
