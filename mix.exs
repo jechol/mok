@@ -5,7 +5,7 @@ defmodule Mok.MixProject do
 
   def project do
     [
-      app: :reather,
+      app: :mok,
       version: @version,
       elixir: "~> 1.11",
       start_permanent: Mix.env() == :prod,
@@ -13,7 +13,7 @@ defmodule Mok.MixProject do
       deps: deps(),
       package: package(),
       description: "Reader + Either",
-      source_url: "https://github.com/jechol/reather",
+      source_url: "https://github.com/jechol/mok",
       docs: docs()
     ]
   end
@@ -43,7 +43,7 @@ defmodule Mok.MixProject do
   defp package do
     [
       licenses: ["MIT"],
-      links: %{"GitHub" => "https://github.com/jechol/reather"},
+      links: %{"GitHub" => "https://github.com/jechol/mok"},
       maintainers: ["Jechol Lee(mr.jechol@gmail.com)"]
     ]
   end
@@ -51,9 +51,9 @@ defmodule Mok.MixProject do
   defp docs() do
     [
       main: "readme",
-      name: "reather",
-      canonical: "http://hexdocs.pm/reather",
-      source_url: "https://github.com/jechol/reather",
+      name: "mok",
+      canonical: "http://hexdocs.pm/mok",
+      source_url: "https://github.com/jechol/mok",
       extras: [
         "README.md"
       ]
