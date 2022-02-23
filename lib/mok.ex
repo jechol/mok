@@ -1,40 +1,39 @@
-defmodule Reather.Macros do
-  defmacro __using__([]) do
-  end
-
-  # Capture
+defmodule Reather do
+  # Remote capture
   defmacro inject(
              {:&, _, [{:/, _, [{{:., _, [mod, name]}, [{:no_parens, true}, _], []}, arity]}]},
-             mock_map
+             mocks
            ) do
     quote do
       fun = :erlang.make_fun(unquote(mod), unquote(name), unquote(arity))
-      Map.get(unquote(mock_map), fun, fun)
+      Map.get(unquote(mocks), fun, fun)
     end
   end
 
-  defmacro inject({:&, _, [{:/, _, [{name, _, _}, arity]}]} = ast, mock_map) do
+  # Local capture
+  defmacro inject({:&, _, [{:/, _, [{name, _, _}, arity]}]} = ast, mocks) do
     %Macro.Env{module: caller_mod, functions: mod_funs} = __CALLER__
     mod = find_func_module({name, arity}, mod_funs, caller_mod)
 
     quote do
       fun = :erlang.make_fun(unquote(mod), unquote(name), unquote(arity))
-      Map.get(unquote(mock_map), fun, unquote(ast))
+      Map.get(unquote(mocks), fun, unquote(ast))
     end
   end
 
-  # Call
-  defmacro inject({{:., _, [mod, name]}, _, args}, mock_map)
+  # Remote call
+  defmacro inject({{:., _, [mod, name]}, _, args}, mocks)
            when is_atom(name) and is_list(args) do
     arity = Enum.count(args)
 
     quote do
       fun = :erlang.make_fun(unquote(mod), unquote(name), unquote(arity))
-      Map.get(unquote(mock_map), fun, fun) |> :erlang.apply(unquote(args))
+      Map.get(unquote(mocks), fun, fun) |> :erlang.apply(unquote(args))
     end
   end
 
-  defmacro inject({name, _, args} = local_call, mock_map)
+  # Local call
+  defmacro inject({name, _, args} = local_call, mocks)
            when is_atom(name) and is_list(args) do
     arity = Enum.count(args)
     %Macro.Env{module: caller_mod, functions: mod_funs} = __CALLER__
@@ -43,13 +42,14 @@ defmodule Reather.Macros do
     quote do
       fun = :erlang.make_fun(unquote(mod), unquote(name), unquote(arity))
 
-      case Map.fetch(unquote(mock_map), fun) do
+      case Map.fetch(unquote(mocks), fun) do
         {:ok, mock} -> :erlang.apply(mock, unquote(args))
         :error -> unquote(local_call)
       end
     end
   end
 
+  # Mock
   def mock(%{} = map) do
     map
     |> Map.new(fn
@@ -69,13 +69,6 @@ defmodule Reather.Macros do
   defp const_fn(8, v), do: fn _a, _b, _c, _d, _e, _f, _g, _h -> v end
   defp const_fn(9, v), do: fn _a, _b, _c, _d, _e, _f, _g, _h, _i -> v end
 
-  # defmacro mock({:%{}, context, mocks}) do
-  #   alias Reather.Mock
-
-  #   {:%{}, context, mocks |> Enum.map(&Mock.decorate_with_fn/1)}
-  #   |> trace()
-  # end
-
   # Private
 
   defp find_func_module(name_arity, mod_funs, caller_mod) do
@@ -85,23 +78,9 @@ defmodule Reather.Macros do
         name_arity in funs
       end)
 
-    if remote != nil do
-      {remote_mod, _} = remote
-      remote_mod
-    else
-      caller_mod
+    case remote do
+      {remote_mod, _funs} -> remote_mod
+      nil -> caller_mod
     end
-  end
-
-  defp get_fa({:when, _, [name_args, _when_cond]}) do
-    get_fa(name_args)
-  end
-
-  defp get_fa({name, _, args}) when is_list(args) do
-    {name, args |> Enum.count()}
-  end
-
-  defp get_fa({name, _, _}) do
-    {name, 0}
   end
 end
