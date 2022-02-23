@@ -73,17 +73,25 @@ defmodule MokTest do
   test "mock" do
     m =
       Mok.mock(%{
+        &IO.inspect/1 => fn a -> a + 1 end,
         &Enum.count/1 => 100,
-        {&Enum.map/2, "here"} => 200
+        {&Enum.map/2, "here"} => 200,
+        :hello => :world
       })
 
+    f0 = m[&IO.inspect/1]
+    assert :erlang.fun_info(f0)[:arity] == 1
+    assert f0.(100) == 101
+
     f1 = m[&Enum.count/1]
-    f2 = m[{&Enum.map/2, "here"}]
-
     assert :erlang.fun_info(f1)[:arity] == 1
-    assert :erlang.fun_info(f2)[:arity] == 2
-
     assert f1.(nil) == 100
+
+    f2 = m[{&Enum.map/2, "here"}]
+    assert :erlang.fun_info(f2)[:arity] == 2
     assert f2.(nil, nil) == 200
+
+    v3 = m[:hello]
+    assert v3 == :world
   end
 end

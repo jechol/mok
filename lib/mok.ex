@@ -68,11 +68,17 @@ defmodule Mok do
   def mock(%{} = map) do
     map
     |> Map.new(fn
+      {k, v} when is_function(v) ->
+        {k, v}
+
       {f, v} when is_function(f) ->
         {f, const_fn(Function.info(f)[:arity], v)}
 
       {{f, selector}, v} when is_function(f) ->
         {{f, selector}, const_fn(Function.info(f)[:arity], v)}
+
+      {k, v} ->
+        {k, v}
     end)
   end
 
