@@ -25,10 +25,10 @@ end
     require Mok
 
     def call(mocks) do
-      a = [1, 2, 3] |> List.first() |> Mok.inject(mocks, "unmatched") # 1
-      b = [1, 2, 3] |> List.first() |> Mok.inject(mocks, "matched") # 10
-      c = [1, 2, 3] |> List.first() |> Mok.inject(mocks, nil) # 1
-      d = [1, 2, 3] |> List.first() |> Mok.inject(mocks) # 100
+      a = [1, 2, 3] |> List.first() |> Mok.inject(mocks, "unmatched") # 1 (not injected)
+      b = [1, 2, 3] |> List.first() |> Mok.inject(mocks, "matched") # 10 (injected)
+      c = [1, 2, 3] |> List.first() |> Mok.inject(mocks, nil) # 1 (not injected)
+      d = [1, 2, 3] |> List.first() |> Mok.inject(mocks) # 100 (injected)
 
       a + b + c + d
     end
