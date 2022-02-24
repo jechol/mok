@@ -1,6 +1,6 @@
 [![mix test](https://github.com/jechol/mok/workflows/mix%20test/badge.svg)](https://github.com/jechol/mok/actions)
 [![Hex version badge](https://img.shields.io/hexpm/v/mok.svg)](https://hex.pm/packages/mok)
-[![License badge](https://img.shields.io/hexpm/l/mok.svg)](https://github.com/jechol/mok/blob/master/LICENSE.md)
+[![License badge](https://img.shields.io/hexpm/l/mok.svg)](https://github.com/jechol/mok/blob/main/LICENSE.md)
 
 `mok` is small library to inject and mock functions easily.
 
