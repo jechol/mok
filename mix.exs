@@ -32,7 +32,7 @@ defmodule Mok.MixProject do
   # Run "mix help deps" to learn about dependencies.
   defp deps do
     [
-      {:ex_doc, "~> 0.28.2", only: :dev, runtime: false}
+      {:ex_doc, "~> 0.31.0", only: :dev, runtime: false}
     ]
   end
 
